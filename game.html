@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Sky Runner</title>
+
+<style>
+body{
+    margin:0;
+    background:#111;
+    color:white;
+    text-align:center;
+    font-family:Arial;
+}
+
+canvas{
+    background:linear-gradient(#55cfff,#fff);
+    border:3px solid white;
+}
+
+button{
+    font-size:18px;
+    padding:10px 20px;
+    margin:5px;
+}
+
+#game{
+    display:none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🏃 Sky Runner</h1>
+
+<div id="menu">
+
+<h2>캐릭터 선택</h2>
+
+<button onclick="choose(0)">🧍 기본</button>
+<button onclick="choose(1)">🤖 로봇</button>
+<button onclick="choose(2)">👾 몬스터</button>
+
+<p id="select">
+선택: 🧍 기본
+</p>
+
+<button onclick="start()">
+게임 시작
+</button>
+
+</div>
+
+
+<h2 id="score">점수: 0</h2>
+<h2 id="hp">❤️❤️❤️</h2>
+
+
+<canvas id="game"
+width="400"
+height="600">
+</canvas>
+
+
+<p>
+⬅️ ➡️ 방향키 이동
+</p>
+
+
+<script>
+
+const canvas =
+document.getElementById("game");
+
+const ctx =
+canvas.getContext("2d");
+
+
+
+let player={
+    x:170,
+    y:520,
+    size:50,
+    speed:7
+};
+
+
+
+let chars=[
+"🧍",
+"🤖",
+"👾"
+];
+
+
+let character=0;
+
+
+let keys={};
+
+let obstacles=[];
+
+let score=0;
+
+let hp=3;
+
+let speed=4;
+
+let playing=false;
+
+
+
+
+function choose(n){
+
+character=n;
+
+let text=[
+"🧍 기본",
+"🤖 로봇",
+"👾 몬스터"
+];
+
+document.getElementById("select")
+.innerText=
+"선택: "+text[n];
+
+}
+
+
+
+
+
+document.addEventListener(
+"keydown",
+e=>{
+
+if(e.key==="ArrowLeft")
+keys.left=true;
+
+if(e.key==="ArrowRight")
+keys.right=true;
+
+});
+
+
+document.addEventListener(
+"keyup",
+e=>{
+
+if(e.key==="ArrowLeft")
+keys.left=false;
+
+if(e.key==="ArrowRight")
+keys.right=false;
+
+});
+
+
+
+
+
+
+function start(){
+
+document.getElementById("menu")
+.style.display="none";
+
+canvas.style.display="block";
+
+playing=true;
+
+spawn();
+
+loop();
+
+}
+
+
+
+
+function spawn(){
+
+if(!playing)
+return;
+
+
+obstacles.push({
+
+x:Math.random()*350,
+
+y:-50,
+
+size:50,
+
+speed:speed
+
+});
+
+
+setTimeout(
+spawn,
+800
+);
+
+}
+
+
+
+
+
+function crash(a,b){
+
+return(
+a.x < b.x+b.size &&
+a.x+a.size > b.x &&
+a.y < b.y+b.size &&
+a.y+a.size > b.y
+);
+
+}
+
+
+
+
+
+function update(){
+
+
+if(!playing)
+return;
+
+
+
+if(keys.left)
+player.x-=player.speed;
+
+
+if(keys.right)
+player.x+=player.speed;
+
+
+
+if(player.x<0)
+player.x=0;
+
+
+if(player.x>350)
+player.x=350;
+
+
+
+
+obstacles.forEach(o=>{
+
+o.y+=o.speed;
+
+
+if(crash(player,o)){
+
+
+hp--;
+
+
+document.getElementById("hp")
+.innerText=
+"❤️".repeat(hp);
+
+
+o.y=700;
+
+
+
+if(hp<=0){
+
+end();
+
+}
+
+
+}
+
+
+});
+
+
+
+obstacles=
+obstacles.filter(
+o=>o.y<650
+);
+
+
+
+score++;
+
+
+speed=
+4+score/500;
+
+
+
+document.getElementById("score")
+.innerText=
+"점수: "+score;
+
+
+}
+
+
+
+
+
+function draw(){
+
+
+ctx.clearRect(
+0,
+0,
+400,
+600
+);
+
+
+
+// 캐릭터
+
+ctx.font="50px Arial";
+
+ctx.fillText(
+chars[character],
+player.x,
+player.y
+);
+
+
+
+// 장애물
+
+ctx.font="45px Arial";
+
+obstacles.forEach(o=>{
+
+ctx.fillText(
+"🪨",
+o.x,
+o.y
+);
+
+});
+
+
+}
+
+
+
+
+function end(){
+
+playing=false;
+
+
+let best=
+localStorage.getItem("best")||0;
+
+
+if(score>best){
+
+localStorage.setItem(
+"best",
+score
+);
+
+}
+
+
+alert(
+"게임 종료!\n점수: "+score
+);
+
+
+location.reload();
+
+}
+
+
+
+
+
+function loop(){
+
+update();
+
+draw();
+
+requestAnimationFrame(loop);
+
+}
+
+
+</script>
+
+
+</body>
+</html>
